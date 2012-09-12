@@ -1,10 +1,14 @@
+# TODO: docs
+
 class puppetdb::server(
-    $database                = 'embedded',
-    $psqldatabase_host       = $puppetdb::params::psqldatabase_host,
-    $psqldatabase_port       = $puppetdb::params::psqldatabase_port,
-    $psqldatabase_username   = $puppetdb::params::psqldatabase_username,
-    $psqldatabase_password   = $puppetdb::params::psqldatabase_password,  
-    $psqldatabase            = $puppetdb::params::psqldatabase,
+    $ssl_listen_address      = $puppetdb::params::ssl_listen_address,
+    $ssl_listen_port         = $puppetdb::params::ssl_listen_port,
+    $database                = $puppetdb::params::database,
+    $database_host           = $puppetdb::params::database_host,
+    $database_port           = $puppetdb::params::database_port,
+    $database_username       = $puppetdb::params::database_username,
+    $database_password       = $puppetdb::params::database_password,
+    $database_name           = $puppetdb::params::database_name,
     $confdir                 = $puppetdb::params::confdir,
     $gc_interval             = $puppetdb::params::gc_interval,
     $version                 = 'present',
@@ -14,83 +18,33 @@ class puppetdb::server(
         ensure  => present,
         notify => Service['puppetdb'],
     }
-    
-    file { "${confdir}/database.ini":
-        ensure      => file,
-        require     => Package['puppetdb'],
+
+    class { 'puppetdb::server::database_ini':
+        database                => $database,
+        database_host           => $database_host,
+        database_port           => $database_port,
+        database_username       => $database_username,
+        database_password       => $database_password,
+        database_name           => $database_name,
+        confdir                 => $confdir,
+        notify                  => Service['puppetdb'],
+    }
+
+    class { 'puppetdb::server::jetty_ini':
+        ssl_listen_address  => $ssl_listen_address,
+        ssl_listen_port     => $ssl_listen_port,
+        confdir             => $confdir,
+        notify              => Service['puppetdb'],
     }
 
     service { 'puppetdb':
         ensure => running,
         enable => true,
-        require => File["${confdir}/database.ini"],
     }
 
-    #Set the defaults
-    Ini_setting {
-        path    => "${confdir}/database.ini",
-        require => File["${confdir}/database.ini"],
-        notify => Service['puppetdb'],
-    }
-
-    if $database == 'embedded'{
-        $classname = 'org.hsqldb.jdbcDriver'
-        $subprotocol = 'hsqldb'
-        $subname = 'file:/usr/share/puppetdb/db/db;hsqldb.tx=mvcc;sql.syntax_pgs=true'
-    } elsif $database == 'postgres' {
-        $classname = 'org.postgresql.Driver'
-        $subprotocol = 'postgresql'
-        $subname = "//${psqldatabase_host}:${psqldatabase_port}/${psqldatabase}"
-    
-        ##Only setup for postgres
-        ini_setting {'puppetdb_psdatabase_username':
-            ensure  => present,
-            section => 'database',
-            setting => 'username',
-            value   => $psqldatabase_username,
-        }
-
-        ini_setting {'puppetdb_psdatabase_password':
-            ensure  => present,
-            section => 'database',
-            setting => 'password',
-            value   => $psqldatabase_password,
-        }
-    }
-    
-    ini_setting {'puppetdb_classname':
-            ensure  => present,
-            section => 'database',
-            setting => 'classname',
-            value   => $classname,
-    }
-
-    ini_setting {'puppetdb_subprotocol':
-            ensure  => present,
-            section => 'database',
-            setting => 'subprotocol',
-            value   => $subprotocol,
-    }
-
-    ini_setting {'puppetdb_pgs':
-            ensure  => present,
-            section => 'database',
-            setting => 'syntax_pgs',
-            value   => true,
-    }
-
-    ini_setting {'puppetdb_subname':
-            ensure  => present,
-            section => 'database',
-            setting => 'subname',
-            value   => $subname,
-    }
-
-    ini_setting {'puppetdb_gc_interval':
-            ensure  => present,
-            section => 'database',
-            setting => 'gc-interval',
-            value   => $gc_interval ,
-    }
+    Package['puppetdb'] ->
+        Class['puppetdb::server::database_ini'] ->
+        Class['puppetdb::server::jetty_ini'] ->
+        Service['puppetdb']
     
 }

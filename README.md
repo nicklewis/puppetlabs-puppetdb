@@ -14,6 +14,7 @@ setup for single-node (everything on the puppet master machine)
     yet; relies on a commit made on June 10, 2012 (pull req #75)
  * inkling/puppetlabs-postgres (relies on commits made on June 14, 2012,
     in this fork/branch:
+ * cprice404/inifile -- TODO insert version number here
 
      https://github.com/cprice-puppet/puppet-postgresql/tree/feature/master/align-with-puppetlabs-mysql
 
