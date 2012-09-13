@@ -42,21 +42,28 @@ class puppetdb::terminus(
     ensure  => present,
   }
 
+
   # TODO: we are going to have to add tests here, because if the files below
   #  are modified before the service is actually operational, then the
   #  master will be totally hosed.
 
+  class { 'puppetdb::terminus::validate_puppetdb':
+      puppetdb_server      => $puppetdb_server,
+      puppetdb_port        => $puppetdb_port,
+      require              => Package['puppetdb-terminus'],
+  }
+
   if ($manage_routes) {
     class { 'puppetdb::terminus::routes':
       puppet_confdir => $puppet_confdir,
-      require        => Package['puppetdb-terminus'],
+      require        => Class['puppetdb::terminus::validate_puppetdb'],
     }
   }
 
   if ($manage_storeconfigs) {
     class { 'puppetdb::terminus::storeconfigs':
       puppet_conf => $puppet_conf,
-      require     => Package['puppetdb-terminus'],
+      require        => Class['puppetdb::terminus::validate_puppetdb'],
     }
   }
 
@@ -64,7 +71,7 @@ class puppetdb::terminus(
     server         => $puppetdb_server,
     port           => $puppetdb_port,
     puppet_confdir => $puppet_confdir,
-    require        => Package['puppetdb-terminus'],
+    require        => Class['puppetdb::terminus::validate_puppetdb'],
   }
 
 }

@@ -3,7 +3,7 @@ class puppetdb::params {
 
     # TODO: docs
     # TODO: most of these are not required for embedded db
-    $ssl_listen_address    = $::fqdn
+    $ssl_listen_address    = $::clientcert
     $ssl_listen_port       = 8081
 
     $database          = 'postgres'

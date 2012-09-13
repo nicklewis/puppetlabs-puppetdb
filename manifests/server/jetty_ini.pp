@@ -23,7 +23,6 @@ class puppetdb::server::jetty_ini(
   ini_setting {'puppetdb_sslhost':
       setting => 'ssl-host',
       value   => $ssl_listen_address,
-      ensure  => present,
   }
   ini_setting {'puppetdb_sslport':
       setting => 'ssl-port',

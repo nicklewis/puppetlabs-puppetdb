@@ -5,12 +5,13 @@ node puppet {
 }
 
 node puppetdb-postgres {
-    include puppetdb::postgresql::server
+    class { 'puppetdb::postgresql::server':
+        listen_addresses => 'puppetdb-postgres',
+    }
 }
 
 node puppetdb {
     class { 'puppetdb::server':
-        ssl_listen_address => 'puppetdb',
         database_host      => 'puppetdb-postgres',
     }
 }

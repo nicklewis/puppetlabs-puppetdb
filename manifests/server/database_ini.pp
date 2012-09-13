@@ -9,11 +9,22 @@ class puppetdb::server::database_ini(
     $database_name           = $puppetdb::params::database_name,
     $confdir                 = $puppetdb::params::confdir,
 ) inherits puppetdb::params {
+
+  class { 'puppetdb::server::validate_db':
+    database                => $database,
+    database_host           => $database_host,
+    database_port           => $database_port,
+    database_username       => $database_username,
+    database_password       => $database_password,
+    database_name           => $database_name,
+  }
+
   #Set the defaults
   Ini_setting {
       path    => "${confdir}/database.ini",
       ensure  => present,
       section => 'database',
+      require => Class['puppetdb::server::validate_db'],
   }
   if $database == 'embedded'{
       $classname = 'org.hsqldb.jdbcDriver'
