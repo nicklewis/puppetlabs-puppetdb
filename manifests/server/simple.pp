@@ -3,7 +3,9 @@
 class puppetdb::server::simple(
     $database = $puppetdb::params::database,
 ) inherits puppetdb::params {
-    include puppetdb::server
+    class { 'puppetdb::server':
+        database => $database,
+    }
 
     if ($database == "postgres") {
         class { 'puppetdb::postgresql::server':
