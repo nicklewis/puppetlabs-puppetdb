@@ -4,7 +4,7 @@
 # configures the puppet master to use it accordingly.
 #
 # Parameters:
-#   ['puppetdb_server'] - The dns name or ip of the puppetdb server (defaults to localhost)
+#   ['puppetdb_server'] - The dns name or ip of the puppetdb server (defaults to the certname of the current node)
 #   ['puppetdb_port']   - The port that the puppetdb server is running on (defaults to 8081)
 #   ['manage_routes']   - If true, the module will overwrite the puppet master's routes
 #                         file to configure it to use puppetdb (defaults to true)
@@ -22,7 +22,7 @@
 #
 # Sample Usage:
 #   class { 'puppet::terminus':
-#       puppetdb_server          => 'localhost'
+#       puppetdb_server          => 'my.host.name',
 #       puppetdb_port            => 8081,
 #   }
 #
@@ -30,7 +30,7 @@
 # TODO: port this to use params
 
 class puppetdb::terminus(
-      $puppetdb_server      = 'localhost',
+      $puppetdb_server      = $::clientcert,
       $puppetdb_port        = 8081,
       $manage_routes        = true,
       $manage_storeconfigs  = true,
@@ -42,28 +42,30 @@ class puppetdb::terminus(
     ensure  => present,
   }
 
-
   # TODO: we are going to have to add tests here, because if the files below
   #  are modified before the service is actually operational, then the
   #  master will be totally hosed.
 
-  class { 'puppetdb::terminus::validate_puppetdb':
+  #class { 'puppetdb::terminus::validate_puppetdb':
+  puppetdb_conn_validator { 'puppetdb_conn':
       puppetdb_server      => $puppetdb_server,
       puppetdb_port        => $puppetdb_port,
       require              => Package['puppetdb-terminus'],
   }
 
+  Service<|title == 'puppetdb'|> -> Puppetdb_conn_validator['puppetdb_conn']
+
   if ($manage_routes) {
     class { 'puppetdb::terminus::routes':
       puppet_confdir => $puppet_confdir,
-      require        => Class['puppetdb::terminus::validate_puppetdb'],
+      require        => Puppetdb_conn_validator['puppetdb_conn'],
     }
   }
 
   if ($manage_storeconfigs) {
     class { 'puppetdb::terminus::storeconfigs':
       puppet_conf => $puppet_conf,
-      require        => Class['puppetdb::terminus::validate_puppetdb'],
+      require        => Puppetdb_conn_validator['puppetdb_conn'],
     }
   }
 
@@ -71,7 +73,8 @@ class puppetdb::terminus(
     server         => $puppetdb_server,
     port           => $puppetdb_port,
     puppet_confdir => $puppet_confdir,
-    require        => Class['puppetdb::terminus::validate_puppetdb'],
+    require        => Puppetdb_conn_validator['puppetdb_conn'],
   }
 
 }
+

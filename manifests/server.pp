@@ -11,7 +11,6 @@ class puppetdb::server(
     $database_name           = $puppetdb::params::database_name,
     $confdir                 = $puppetdb::params::confdir,
     $gc_interval             = $puppetdb::params::gc_interval,
-    $version                 = 'present',
 ) inherits puppetdb::params {
 
     package { 'puppetdb':

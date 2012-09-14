@@ -1,3 +1,5 @@
+# TODO: docs
+
 node puppet {
     class { 'puppetdb::terminus':
         puppetdb_server => 'puppetdb',
